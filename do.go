@@ -62,6 +62,8 @@ func main() {
     data = renameItem(args,data)
   case "toggle":
     data = toggleItem(args,data)
+  case "done":
+    data = toggleItem(args,data)
   case "del":
     data = delItem(args,data)
   default:
@@ -74,16 +76,22 @@ func main() {
 }
 
 func listItems(args []string, data TodoListItems) {
-  fmt.Println("TODO List:")
-  fmt.Println()
+  fmt.Println("todo list")
   for i := 0; i < len(data.Items); i++{
+    title := data.Items[i].Title
     toggleString := ""
+    space := ""
+    if len(data.Items) > 9 {
+      if(i < 10) {
+        space = " "
+      }
+    }
     if data.Items[i].Done {
       toggleString = "[x]"
     } else {
       toggleString = "[ ]"
     }
-    fmt.Println(i,toggleString,data.Items[i].Title)
+    fmt.Printf("%s%v %s %s\n",space,i,toggleString,title)
   }
 }
 
