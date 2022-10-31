@@ -28,25 +28,6 @@ func main() {
 
   args := os.Args[1:]
 
-  // new_item := TodoListItem{
-  //   Title: "test",
-  //   Done: false,
-  // } 
-
-  // data := TodoListItems{
-  //   Items: []TodoListItem{new_item},
-  // }
-
-  // new_item_two := TodoListItem{
-  //   Title: "test_two",
-  //   Done: false,
-  // } 
-
-  // fmt.Println(data)
-
-  //data.Items = data.Items.append(data.Items,new_item_two)
-
-  // if no command is passed, print out the todo list.
   if len(args) == 0 {
     listItems(args,data)
     return
