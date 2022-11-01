@@ -57,7 +57,6 @@ func initialModel() model {
   var filename = home+"/.local/share/do/items.json"
   file, _ := ioutil.ReadFile(filename)
   data := TodoListItems{}
-  fmt.Printf("%v",data)
   _ = json.Unmarshal([]byte(file),&data)
 
   ti := textinput.New()
