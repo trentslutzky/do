@@ -229,7 +229,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
   return m, cmd
 }
 
-var title_margin_left = 2
+var title_margin_left = 1
 var title_margin_top = 1
 var title_margin_bottom = 1
 
