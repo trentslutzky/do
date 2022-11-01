@@ -1,110 +1,149 @@
 package main
 
 import (
-  "fmt"
-  "os"
-  "encoding/json"
-  "io/ioutil"
-  "strconv"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"sort"
+
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type TodoListItem struct {
+  Id int
   Title string
   Done bool
+}
+
+type model struct {
+  items  []TodoListItem
+  cursor   int
+  selected map[int]struct{}
+  deleting bool
 }
 
 type TodoListItems struct {
   Items []TodoListItem
 }
 
-const filename = "/Users/trent/.local/share/do/items.json"
-
-func main() {
-
+func initialModel() model {
+  var home = os.Getenv("HOME")
+  var filename = home+"/.local/share/do/items.json"
   file, _ := ioutil.ReadFile(filename)
   data := TodoListItems{}
-
   _ = json.Unmarshal([]byte(file),&data)
-
-  args := os.Args[1:]
-
-  if len(args) == 0 {
-    listItems(args,data)
-    return
+  return model{
+    items: data.Items,
+    cursor: 0,
+    deleting: false,
   }
-
-  com := args[0]
-
-
-  switch com {
-  case "new":
-    data = newItem(args,data)
-  case "rename":
-    data = renameItem(args,data)
-  case "toggle":
-    data = toggleItem(args,data)
-  case "done":
-    data = toggleItem(args,data)
-  case "del":
-    data = delItem(args,data)
-  default:
-    fmt.Println("Unrecognized command.")
-  }
-
-  file, _ = json.MarshalIndent(data, "", " ")
-  _ = ioutil.WriteFile(filename,file, 0644)
-
 }
 
-func listItems(args []string, data TodoListItems) {
-  fmt.Println("todo list")
-  for i := 0; i < len(data.Items); i++{
-    title := data.Items[i].Title
-    toggleString := ""
-    space := ""
-    if len(data.Items) > 9 {
-      if(i < 10) {
-        space = " "
+func (m model) Init() tea.Cmd {
+  return nil
+}
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+  switch msg := msg.(type) {
+
+  case tea.KeyMsg:
+
+    switch msg.String() {
+
+    case "ctrl+c", "q":
+      return m, tea.Quit
+
+    case "up":
+      if m.cursor > 0 {
+        m.cursor--
+      }
+
+    case "down":
+      if m.cursor < len(m.items)-1 {
+        m.cursor++
+      }
+
+    case "enter", " ":
+      m.items[m.cursor].Done = !m.items[m.cursor].Done
+
+    }
+  }
+
+  return m, nil
+}
+
+var title_style = lipgloss.NewStyle().
+  Bold(true).
+  Foreground(lipgloss.Color("0")).
+  Background(lipgloss.Color("4")).
+  MarginTop(1).
+  MarginBottom(1).
+  MarginLeft(2)
+
+var normal_style = lipgloss.NewStyle().
+  Bold(false).
+  Foreground(lipgloss.Color("7"))
+
+var selected_style = lipgloss.NewStyle().
+  Bold(true).
+  Foreground(lipgloss.Color("15"))
+
+var check_style = lipgloss.NewStyle().
+  Bold(true).
+  Foreground(lipgloss.Color("2"))
+
+var checked_style = lipgloss.NewStyle().
+  Bold(false).
+  Foreground(lipgloss.Color("#666"))
+
+func (m model) View() string {
+  s := title_style.Render(" Todo List ")
+  s += "\n"
+  sort.SliceStable(m.items, func(i, j int) bool {
+    return m.items[i].Done == false
+  })
+  sort.SliceStable(m.items, func(i, j int) bool {
+    return m.items[i].Id < m.items[j].Id
+  })
+  for i, item := range m.items {
+
+
+    line_string := ""
+    checked := " "
+
+    if item.Done {
+      checked = check_style.Render("   ")
+      if m.cursor == i {
+        line_string = selected_style.Render("%s")
+      } else {
+        line_string = checked_style.Render("%s")
+      }
+    } else {
+      if m.cursor == i {
+        checked = "   "
+        line_string = selected_style.Render("%s")
+      } else {
+        checked = "   "
+        line_string = normal_style.Render("%s")
       }
     }
-    if data.Items[i].Done {
-      toggleString = "[x]"
-    } else {
-      toggleString = "[ ]"
-    }
-    fmt.Printf("%s%v %s %s\n",space,i,toggleString,title)
+
+    s += fmt.Sprintf(checked)
+    s += fmt.Sprintf(line_string, item.Title)
+
+    s += "\n"
   }
+  s += "\n"
+
+  return s
 }
 
-func newItem(args []string, data TodoListItems) TodoListItems {
-  title := args[1]
-  new_item := TodoListItem{
-    Title: title,
-    Done: false,
+func main() {
+  p := tea.NewProgram(initialModel(), tea.WithAltScreen())
+  if err := p.Start(); err != nil {
+    fmt.Printf("erroro %v", err)
+    os.Exit(1)
   }
-  data.Items = append(data.Items,new_item)
-  listItems(args,data)
-  return data
-}
-
-func delItem(args []string, data TodoListItems) TodoListItems {
-  delIndex,_ := strconv.Atoi(args[1])
-  data.Items = append(data.Items[:delIndex],data.Items[delIndex+1:]...)
-  listItems(args,data)
-  return data
-}
-
-func renameItem(args []string, data TodoListItems) TodoListItems {
-  selectIndex,_ := strconv.Atoi(args[1])
-  newTitle := args[2]
-  data.Items[selectIndex].Title = newTitle
-  listItems(args,data)
-  return data
-}
-
-func toggleItem(args []string, data TodoListItems) TodoListItems {
-  toggleIndex,_ := strconv.Atoi(args[1])
-  data.Items[toggleIndex].Done = !data.Items[toggleIndex].Done
-  listItems(args,data)
-  return data
 }
