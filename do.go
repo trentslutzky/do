@@ -126,7 +126,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         m.cursor++
       }
 
-    case "n":
+    case "n", "o":
       if is_not_editing {
         m.new_item_textInput.Prompt = plus_style.Render(" "+plus_icon+" ")
         m.creating = true
@@ -230,37 +230,41 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
   return m, cmd
 }
 
+var title_margin_left = 2
+var title_margin_top = 1
+var title_margin_bottom = 1
+
 var title_style_normal = lipgloss.NewStyle().
   Bold(true).
   Foreground(lipgloss.Color("0")).
   Background(lipgloss.Color("4")).
-  MarginTop(0).
-  MarginBottom(1).
-  MarginLeft(0)
+  MarginTop(title_margin_top).
+  MarginBottom(title_margin_bottom).
+  MarginLeft(title_margin_left)
 
 var title_style_new_item = lipgloss.NewStyle().
   Bold(true).
   Foreground(lipgloss.Color("0")).
   Background(lipgloss.Color("5")).
-  MarginTop(0).
-  MarginBottom(1).
-  MarginLeft(0)
+  MarginTop(title_margin_top).
+  MarginBottom(title_margin_bottom).
+  MarginLeft(title_margin_left)
 
 var title_style_delete = lipgloss.NewStyle().
   Bold(true).
   Foreground(lipgloss.Color("0")).
   Background(lipgloss.Color("1")).
-  MarginTop(0).
-  MarginBottom(1).
-  MarginLeft(0)
+  MarginTop(title_margin_top).
+  MarginBottom(title_margin_bottom).
+  MarginLeft(title_margin_left)
 
 var title_style_edit = lipgloss.NewStyle().
   Bold(true).
   Foreground(lipgloss.Color("0")).
   Background(lipgloss.Color("3")).
-  MarginTop(0).
-  MarginBottom(1).
-  MarginLeft(0)
+  MarginTop(title_margin_top).
+  MarginBottom(title_margin_bottom).
+  MarginLeft(title_margin_left)
 
 var normal_style = lipgloss.NewStyle().
   Bold(false).
@@ -365,6 +369,16 @@ func (m model) View() string {
     s += "\n"
   }
 
+  command := ""
+  if m.editing {
+    command = edit_style.Render(" edit")+" -"
+  } else if m.deleting {
+    command = delete_style.Render(" delete")+" -"
+  } else if m.creating {
+    command = plus_style.Render(" new")+" -"
+  }
+
+  s += command
   if m.show_help {
     if m.deleting {
       s += " "
@@ -390,7 +404,7 @@ func (m model) View() string {
       s += help_style_key.Render("q ")
       s += help_style_normal.Render("quit")
       s += "  "
-      s += help_style_key.Render("n ")
+      s += help_style_key.Render("n/o ")
       s += help_style_normal.Render("new")
       s += "  "
       s += help_style_key.Render("d ")
