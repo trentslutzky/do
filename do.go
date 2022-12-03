@@ -19,7 +19,8 @@ type TodoListItem struct {
 }
 
 type model struct {
-  items              []TodoListItem
+  todos              []TodoListItem
+  ideas              []TodoListItem
   cursor             int
   selected           map[int]struct{}
   deleting           bool
@@ -32,7 +33,8 @@ type model struct {
 }
 
 type TodoListItems struct {
-  Items []TodoListItem
+  items []TodoListItem
+  ideas []TodoListItem
 }
 
 var plus_style = lipgloss.NewStyle().
@@ -64,7 +66,8 @@ func initialModel() model {
   ti.Prompt = plus_style.Render(" "+plus_icon+" ")
 
   return model{
-    items: data.Items,
+    todos: data.todo,
+    ideas: data.ideas,
     cursor: 0,
     deleting: false,
     editing: false,
@@ -107,10 +110,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       if is_not_editing {
         var home = os.Getenv("HOME")
         var filename = home+"/.local/share/do/items.json"
-        new_items := TodoListItems{
-          Items: m.items,
+        new_data := TodoListItems{
+          todos: m.items,
         }
-        file, _ := json.MarshalIndent(new_items, "", " ")
+        file, _ := json.MarshalIndent(new_data, "", " ")
         _ = ioutil.WriteFile(filename,file, 0644)
         return m, tea.Quit
       }
